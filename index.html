@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Business Card</title>
+<style>
+  :root {
+    --bg: #f4f2ee; --surface: #ffffff; --ink: #1d1d1f; --muted: #6b6b70;
+    --line: #e3e0da; --accent: #1f4e79; --accent-ink: #ffffff; --ok: #2e7d4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141416; --surface: #1f1f22; --ink: #f2f2f4; --muted: #a0a0a8;
+            --line: #33333a; --accent: #7fb2e5; --accent-ink: #0d1b2a; --ok: #6fcf97; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 480px; margin: 0 auto; }
+  [hidden] { display: none !important; }
+  .state { text-align: center; padding: 30vh 12px 0; color: var(--muted); }
+  .state strong { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
+  .card-img {
+    display: block; width: 100%; height: auto; border-radius: 14px; margin: 4px 0 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.12); background: var(--surface);
+  }
+  h1 { font-size: 26px; line-height: 1.2; margin: 10px 0 0; letter-spacing: -.01em; }
+  .ja { color: var(--muted); font-size: 15px; margin-top: 2px; }
+  .role { margin-top: 10px; font-size: 15px; }
+  .role div + div { color: var(--muted); }
+  .primary {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    margin: 0 0 10px; padding: 15px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; font-size: 17px; cursor: pointer;
+  }
+  .secondary {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; padding: 12px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    color: var(--ink); font: inherit; font-weight: 500; cursor: pointer;
+  }
+  .sub { font-size: 12px; font-weight: 400; opacity: .85; }
+  .hint { font-size: 12px; color: var(--muted); text-align: center; margin: 4px 0 0; }
+  .list { margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .label { font-size: 12px; color: var(--muted); }
+  .row .value { font-size: 15px; overflow-wrap: anywhere; }
+  .row .text { flex: 1; min-width: 0; }
+  .row .btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .chip {
+    border: 1px solid var(--line); background: transparent; color: var(--accent);
+    border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 14px; font-weight: 600;
+    text-decoration: none; cursor: pointer; white-space: nowrap;
+  }
+  .chip.done { color: var(--ok); border-color: var(--ok); }
+  .trust { margin-top: 26px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+<main>
+  <div class="state" id="stLoading"><strong>Opening…</strong>読み込み中</div>
+  <div class="state" id="stLocked" hidden>
+    <strong>This card is private.</strong>
+    Please scan the QR code shown to you.<br>表示されたQRコードを読み取ってください。
+  </div>
+  <div class="state" id="stError" hidden>
+    <strong>This card could not be opened.</strong>
+    The QR code may be outdated. Please ask for a new one.<br>QRコードが古い可能性があります。
+  </div>
+
+  <div id="card" hidden>
+    <img id="cardImg" class="card-img" alt="Business card">
+
+    <button class="primary" id="saveCard" type="button">Save card image <span class="sub">名刺画像を保存</span></button>
+    <p class="hint" id="saveHint">Please save it now — once closed, this page can't be reopened without the QR code.<br>この画面を閉じると再表示にはQRコードが必要です。今のうちに保存してください。</p>
+
+    <h1 id="nameEn"></h1>
+    <div class="ja" id="nameJa"></div>
+    <div class="role">
+      <div id="title"></div><div id="org"></div><div id="lab"></div><div id="research"></div>
+    </div>
+
+    <button class="secondary" id="addContact" type="button">Add to Contacts <span class="sub">連絡先に追加</span></button>
+    <div class="list" id="links"></div>
+
+    <p class="trust">
+      No login, no forms, no trackers. The card is encrypted;<br>
+      the key is only in the QR code and is never sent to the server.<br>
+      ログイン・入力・追跡なし。名刺は暗号化されており、鍵はQRコードの中にだけあります。<br>
+      <span id="host"></span>
+    </p>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
