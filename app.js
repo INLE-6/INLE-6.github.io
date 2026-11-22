@@ -59,7 +59,7 @@
     setText("nameEn", C.nameEn); setText("nameJa", C.nameJa);
     $("met").textContent = C.conference ? "Met at " + C.conference : "";
     var role = $("role");
-    [[C.title, C.titleJa], [C.org, C.orgJa], [C.lab, C.labJa], [C.research, ""]].forEach(function (p) {
+    [[C.title, C.titleJa], [C.org, C.orgJa], [C.lab, C.labJa], [C.research, C.researchJa]].forEach(function (p) {
       if (!p[0] && !p[1]) return;
       var d = document.createElement("div"); d.className = "pair";
       if (p[0]) { var e = document.createElement("div"); e.textContent = p[0]; d.appendChild(e); }
@@ -78,13 +78,15 @@
       saveFile(new File([imgBlob], base + "_card." + ext, { type: imgBlob.type }),
         "Long-press the card image to save it. / 名刺画像を長押しして保存してください");
     });
-    $("addContact").addEventListener("click", function () {
-      saveFile(new File([buildVcard(C)], base + ".vcf", { type: "text/vcard" }),
-        "Please use the Copy buttons below. / 下のCopyボタンをお使いください");
+    [["addContactEn", "en"], ["addContactJa", "ja"]].forEach(function (x) {
+      $(x[0]).addEventListener("click", function () {
+        saveFile(new File([buildVcard(C, x[1])], base + (x[1] === "ja" ? "_ja" : "") + ".vcf", { type: "text/vcard" }),
+          "Please use the Copy buttons below. / 下のCopyボタンをお使いください");
+      });
     });
 
     var list = $("links");
-    function row(label, value, buttons) {
+    function row(label, value, buttons, sub) {
       var r = document.createElement("div"); r.className = "row";
       var t = document.createElement("div"); t.className = "text";
       var l = document.createElement("div"); l.className = "label"; l.textContent = label;
@@ -93,7 +95,9 @@
         if (i) { v.appendChild(document.createTextNode("@")); v.appendChild(document.createElement("wbr")); }
         v.appendChild(document.createTextNode(part));
       });
-      t.appendChild(l); t.appendChild(v); r.appendChild(t);
+      t.appendChild(l); t.appendChild(v);
+      if (sub) { var su = document.createElement("div"); su.className = "label"; su.textContent = sub; t.appendChild(su); }
+      r.appendChild(t);
       var b = document.createElement("div"); b.className = "btns";
       buttons.forEach(function (x) { b.appendChild(x); });
       r.appendChild(b); list.appendChild(r);
@@ -121,8 +125,9 @@
     mailRow("Email (Permanent) / 卒業後も有効", C.emailPersonal);
     if (C.instagram) {
       var ig = C.instagram.replace(/^@/, "");
-      var igLabel = C.instagramClub ? "Instagram — " + C.instagramClub + " (club account / サークル)" : "Instagram";
-      row(igLabel, "@" + ig, [linkChip("Open", "https://www.instagram.com/" + encodeURIComponent(ig) + "/"), copyChip("@" + ig)]);
+      var club = [C.instagramClub, C.instagramClubJa].filter(Boolean).join(" / ");
+      row(club ? "Instagram (club account / サークルのアカウント)" : "Instagram", "@" + ig,
+        [linkChip("Open", "https://www.instagram.com/" + encodeURIComponent(ig) + "/"), copyChip("@" + ig)], club);
     }
 
     show("card");
@@ -149,24 +154,6 @@
     ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
     ta.select(); ta.setSelectionRange(0, value.length);
     try { document.execCommand("copy"); } catch (e) {} ta.remove();
-  }
-
-  function esc(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;"); }
-  function buildVcard(C) {
-    var L = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(C.familyEn) + ";" + esc(C.givenEn) + ";;;", "FN:" + esc(C.nameEn)];
-    if (C.org) L.push("ORG:" + esc(C.org) + (C.lab ? ";" + esc(C.lab) : ""));
-    if (C.title) L.push("TITLE:" + esc(C.title));
-    if (C.emailUni) L.push("EMAIL;TYPE=INTERNET,WORK:" + C.emailUni);
-    if (C.emailPersonal) L.push("EMAIL;TYPE=INTERNET,HOME:" + C.emailPersonal);
-    var ig = (C.instagram || "").replace(/^@/, "");
-    if (ig) L.push("X-SOCIALPROFILE;TYPE=instagram:https://www.instagram.com/" + ig + "/");
-    var note = [C.nameJa, C.conference && "Met at " + C.conference,
-      [C.titleJa, C.orgJa, C.labJa].filter(Boolean).join(" "),
-      C.research && "Research: " + C.research,
-      ig && C.instagramClub && "Instagram @" + ig + " = " + C.instagramClub + " (club account)"].filter(Boolean);
-    if (note.length) L.push("NOTE:" + esc(note.join(" / ")));
-    L.push("END:VCARD");
-    return L.join("\r\n") + "\r\n";
   }
 
   main();
