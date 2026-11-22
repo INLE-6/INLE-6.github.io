@@ -33,8 +33,14 @@
   }
   h1 { font-size: 26px; line-height: 1.2; margin: 10px 0 0; letter-spacing: -.01em; }
   .ja { color: var(--muted); font-size: 15px; margin-top: 2px; }
-  .role { margin-top: 10px; font-size: 15px; }
-  .role div + div { color: var(--muted); }
+  .role { margin-top: 12px; font-size: 15px; }
+  .role .pair + .pair { margin-top: 8px; }
+  .role .pj { color: var(--muted); font-size: 13px; }
+  .met {
+    display: inline-block; margin-top: 18px; padding: 4px 12px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 13px;
+  }
+  .met:empty { display: none; }
   .primary {
     display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
     margin: 0 0 10px; padding: 15px; border: 0; border-radius: 12px;
@@ -81,11 +87,10 @@
     <button class="primary" id="saveCard" type="button">Save card image <span class="sub">名刺画像を保存</span></button>
     <p class="hint" id="saveHint">Please save it now — once closed, this page can't be reopened without the QR code.<br>この画面を閉じると再表示にはQRコードが必要です。今のうちに保存してください。</p>
 
+    <div class="met" id="met"></div>
     <h1 id="nameEn"></h1>
     <div class="ja" id="nameJa"></div>
-    <div class="role">
-      <div id="title"></div><div id="org"></div><div id="lab"></div><div id="research"></div>
-    </div>
+    <div class="role" id="role"></div>
 
     <button class="secondary" id="addContact" type="button">Add to Contacts <span class="sub">連絡先に追加</span></button>
     <div class="list" id="links"></div>

@@ -56,8 +56,16 @@
 
   function render(C, imgBlob) {
     var setText = function (id, v) { var el = $(id); if (v) el.textContent = v; else el.remove(); };
-    setText("nameEn", C.nameEn); setText("nameJa", C.nameJa); setText("title", C.title);
-    setText("org", C.org); setText("lab", C.lab); setText("research", C.research);
+    setText("nameEn", C.nameEn); setText("nameJa", C.nameJa);
+    $("met").textContent = C.conference ? "Met at " + C.conference : "";
+    var role = $("role");
+    [[C.title, C.titleJa], [C.org, C.orgJa], [C.lab, C.labJa], [C.research, ""]].forEach(function (p) {
+      if (!p[0] && !p[1]) return;
+      var d = document.createElement("div"); d.className = "pair";
+      if (p[0]) { var e = document.createElement("div"); e.textContent = p[0]; d.appendChild(e); }
+      if (p[1]) { var j = document.createElement("div"); j.className = "pj"; j.textContent = p[1]; d.appendChild(j); }
+      role.appendChild(d);
+    });
     // The page title stays generic so the name never ends up in browser history.
 
     var imgUrl = URL.createObjectURL(imgBlob);
@@ -76,7 +84,6 @@
     });
 
     var list = $("links");
-    var subject = encodeURIComponent("Nice to meet you" + (C.conference ? " at " + C.conference : ""));
     function row(label, value, buttons) {
       var r = document.createElement("div"); r.className = "row";
       var t = document.createElement("div"); t.className = "text";
@@ -108,16 +115,15 @@
       return b;
     }
     function mailRow(label, email) {
-      if (email) row(label, email, [linkChip("Mail", "mailto:" + email + "?subject=" + subject), copyChip(email)]);
+      if (email) row(label, email, [linkChip("Mail", "mailto:" + email), copyChip(email)]);
     }
     mailRow("Email (University) / 大学", C.emailUni);
     mailRow("Email (Permanent) / 卒業後も有効", C.emailPersonal);
     if (C.instagram) {
       var ig = C.instagram.replace(/^@/, "");
-      row("Instagram", "@" + ig, [linkChip("Open", "https://www.instagram.com/" + encodeURIComponent(ig) + "/"), copyChip("@" + ig)]);
+      var igLabel = C.instagramClub ? "Instagram — " + C.instagramClub + " (club account / サークル)" : "Instagram";
+      row(igLabel, "@" + ig, [linkChip("Open", "https://www.instagram.com/" + encodeURIComponent(ig) + "/"), copyChip("@" + ig)]);
     }
-    if (C.linkedin) row("LinkedIn", C.linkedin, [linkChip("Open", "https://www.linkedin.com/in/" + encodeURIComponent(C.linkedin) + "/")]);
-    if (C.orcid) row("ORCID", C.orcid, [linkChip("Open", "https://orcid.org/" + encodeURIComponent(C.orcid))]);
 
     show("card");
   }
@@ -154,8 +160,10 @@
     if (C.emailPersonal) L.push("EMAIL;TYPE=INTERNET,HOME:" + C.emailPersonal);
     var ig = (C.instagram || "").replace(/^@/, "");
     if (ig) L.push("X-SOCIALPROFILE;TYPE=instagram:https://www.instagram.com/" + ig + "/");
-    if (C.linkedin) L.push("X-SOCIALPROFILE;TYPE=linkedin:https://www.linkedin.com/in/" + C.linkedin + "/");
-    var note = [C.nameJa, C.conference && "Met at " + C.conference, C.research && "Research: " + C.research, C.orcid && "ORCID " + C.orcid].filter(Boolean);
+    var note = [C.nameJa, C.conference && "Met at " + C.conference,
+      [C.titleJa, C.orgJa, C.labJa].filter(Boolean).join(" "),
+      C.research && "Research: " + C.research,
+      ig && C.instagramClub && "Instagram @" + ig + " = " + C.instagramClub + " (club account)"].filter(Boolean);
     if (note.length) L.push("NOTE:" + esc(note.join(" / ")));
     L.push("END:VCARD");
     return L.join("\r\n") + "\r\n";
